@@ -5,7 +5,7 @@
 
 ---
 
-## 一、11140「账号异常行为」按软冷却处理（0042）
+## 一、11140「账号异常行为」按软冷却处理（0043）
 
 ### 现场
 
@@ -47,7 +47,7 @@ CN 账号调用 `/v2/chat/completions` 返回：
 
 ---
 
-## 二、大上下文请求逐请求轮换（0043）
+## 二、大上下文请求逐请求轮换（0044）
 
 ### 现场
 
@@ -94,12 +94,12 @@ key=38 / UA=deepseek-harness / 客户端 IP 222.85.110.6
 
 ```bash
 cd upstream   # v2.11.6 源码根
-git apply /path/to/0042-upstream-restriction-soft-cooldown.patch
-git apply /path/to/0043-large-request-rotation.patch
+git apply /path/to/0043-upstream-restriction-soft-cooldown.patch
+git apply /path/to/0044-large-request-rotation.patch
 go build ./... && go test ./internal/server/ ./internal/upstream/
 ```
 
-两个补丁互相独立（0043 不依赖 0042），都基于 v2.11.6 上游源码。
+两个补丁互相独立（0044 不依赖 0043），都基于 v2.11.6 上游源码。
 
 ## 未纳入本 PR 的本地改动
 
