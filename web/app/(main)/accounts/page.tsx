@@ -47,6 +47,9 @@ import {
   availabilityGroupLabelKey,
   availabilityLabelKey,
   availabilityOf,
+  isAccountBanned,
+  needsRelogin,
+  disabledReasonText,
   isDegraded,
   mergePoolStatus,
   rateLimitedModels,
@@ -488,9 +491,9 @@ export default function AccountsPage() {
     [visible],
   );
 
-  /** 封控中（上游自动禁用，需重新登录解封）的账号数 */
+  /** 可尝试重登修复的账号数，不含上游封禁。 */
   const blockedCount = useMemo(
-    () => visible.filter((a) => availabilityOf(a) === 'disabled').length,
+    () => visible.filter(needsRelogin).length,
     [visible],
   );
 
@@ -608,14 +611,14 @@ export default function AccountsPage() {
     const label = t(availabilityLabelKey(tier, a));
 
     if (tier === 'disabled') {
-      const reason = String(a.disabled_reason || '');
+      const reason = disabledReasonText(a);
       // 悬停提示两行：封禁原因 + （管理员）解禁出路。
       // 为什么用 Tooltip 而不是原生 title：原生提示有 1~2 秒延迟且部分环境
       // 根本不弹（用户实测「移上去没效果」）；Radix Tooltip 悬停即显。
       // 移动端没有 hover，原因在下方卡片里直接铺一行小字（见移动端卡片区）。
       const tipLines = [
         reason ? t('accounts.disabledReason', {reason}) : null,
-        isAdmin ? reloginHint : null,
+        isAccountBanned(a) ? t('accounts.bannedHint') : isAdmin ? reloginHint : null,
       ].filter(Boolean) as string[];
       return (
         <Tooltip>
@@ -1163,8 +1166,8 @@ export default function AccountsPage() {
             'h-7 w-7 rounded-md ' +
             (stopped ? 'text-emerald-600 hover:text-emerald-600' : 'text-amber-600 hover:text-amber-600')
           }
-          title={stopped ? t('accounts.enableTitle') : t('accounts.disableTitle')}
-          disabled={busy}
+          title={isAccountBanned(a) ? t('accounts.bannedHint') : stopped ? t('accounts.enableTitle') : t('accounts.disableTitle')}
+          disabled={busy || isAccountBanned(a)}
           onClick={() => run(
             a.file,
             // 传 `stopped` 的反面：自动禁用的号点这里会走「启用」，后端在启用路径上
@@ -1557,10 +1560,10 @@ export default function AccountsPage() {
               {availabilityOf(a) === 'disabled' && (a.disabled_reason || isAdmin) && (
                 <div className="text-[11px] leading-4 text-rose-600 dark:text-rose-400">
                   {a.disabled_reason
-                    ? t('accounts.disabledReason', {reason: String(a.disabled_reason)})
+                    ? t('accounts.disabledReason', {reason: disabledReasonText(a)})
                     : t('accounts.badgeDisabled')}
                   {isAdmin && (
-                    <span className="text-muted-foreground"> · {reloginHint}</span>
+                    <span className="text-muted-foreground"> · {isAccountBanned(a) ? t('accounts.bannedHint') : reloginHint}</span>
                   )}
                 </div>
               )}
